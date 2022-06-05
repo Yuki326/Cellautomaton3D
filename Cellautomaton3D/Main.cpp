@@ -588,15 +588,24 @@ void Main()
 		scale += Mouse::Wheel()/10;
 		//SimpleGUI::Button(U"\U000F04AD", Vec2(100, 100), 100);
 		if (visiable) {
-			if (SimpleGUI::Button(U"\U000F020A:A", Vec2(650, 300), 100)||KeyA.down()) {
+			if (SimpleGUI::Button(U"\U000F020A:A", Vec2(650, 300), 100)) {
 				fieldState = addField(fieldState);
 				models = fieldToModels(fieldState, models, cubePolygons, core);
 			};
-			if (SimpleGUI::Button(U"\U000F04E6:R", Vec2(650, 500), 100)||KeyR.down()) {
+			if (SimpleGUI::Button(U"\U000F04E6:R", Vec2(650, 500), 100)) {
 				fieldState = getVoidField();
 				fieldState = addField(fieldState);
 				models = fieldToModels(fieldState, models, cubePolygons, core);
 			}
+		}
+		if (KeyA.down()) {
+			fieldState = addField(fieldState);
+			models = fieldToModels(fieldState, models, cubePolygons, core);
+		};
+		if (KeyR.down()) {
+			fieldState = getVoidField();
+			fieldState = addField(fieldState);
+			models = fieldToModels(fieldState, models, cubePolygons, core);
 		}
 		if (SimpleGUI::Button(visiable ? U"\U000F0208:M" : U"\U000F0209:N", Vec2(650, 100), 100)) {
 			visiable = !visiable;
