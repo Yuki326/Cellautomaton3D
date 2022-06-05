@@ -508,7 +508,7 @@ void Main()
 {
 	srand(time(NULL));
 	// 背景を黒にする
-	Scene::SetBackground(Color{22,31,40});
+	Scene::SetBackground(Color{0,0,0});
 
 	// 大きさ 60 のフォントを用意
 	const Font font(60);
@@ -582,24 +582,30 @@ void Main()
 		drawStar(hoshi);
 
 		//
-		Rect(Scene::Width() - 200,5, 190, Scene::Height()-10).draw(Color{64,53,130,180});
-		Rect(5, Scene::Height() - 100, Scene::Width() - 210, 90).draw(Color{ 64,53,130,180 });
+		Rect(Scene::Width() - 200,10, 190, Scene::Height()-20).draw(Color{255,0,0,180});
+		Rect(10, Scene::Height() - 120, Scene::Width() - 220, 110).draw(Color{ 255,0,0,180 });
 
 		scale += Mouse::Wheel()/10;
 		//SimpleGUI::Button(U"\U000F04AD", Vec2(100, 100), 100);
 		if (visiable) {
-			if (SimpleGUI::Button(U"\U000F020A", Vec2(650, 300), 100)) {
+			if (SimpleGUI::Button(U"\U000F020A:A", Vec2(650, 300), 100)||KeyA.down()) {
 				fieldState = addField(fieldState);
 				models = fieldToModels(fieldState, models, cubePolygons, core);
 			};
-			if (SimpleGUI::Button(U"\U000F04E6", Vec2(650, 500), 100)) {
+			if (SimpleGUI::Button(U"\U000F04E6:R", Vec2(650, 500), 100)||KeyR.down()) {
 				fieldState = getVoidField();
 				fieldState = addField(fieldState);
 				models = fieldToModels(fieldState, models, cubePolygons, core);
 			}
 		}
-		if (SimpleGUI::Button(visiable ? U"\U000F0208" : U"\U000F0209", Vec2(650, 100), 100)) {
+		if (SimpleGUI::Button(visiable ? U"\U000F0208:M" : U"\U000F0209:N", Vec2(650, 100), 100)) {
 			visiable = !visiable;
+		}
+		if (KeyM.down()) {
+			visiable = false;
+		}
+		if (KeyN.down()) {
+			visiable = true;
 		}
 		if (MouseL.pressed() && Cursor::Pos().x <Scene::Width() - 150 && Cursor::Pos().y < Scene::Height() - 100) {
 			if (!lock) {
@@ -613,8 +619,8 @@ void Main()
 			lock = false;
 			moveState = moveState > 0 ? moveState - 1 : 0;
 		}
-		SimpleGUI::Slider(U"rate", CELL_PER, 3.0, 20.0, Vec2(10, 520), 60, 250);
-		SimpleGUI::Slider(U"color",COLOR , 0, 100.0, Vec2(300, 520), 60, 250);
+		SimpleGUI::Slider(U"初期配置の割合", CELL_PER, 3.0, 20.0, Vec2(40, 490), 160, 300);
+		SimpleGUI::Slider(U"セルの色",COLOR , 0, 100.0, Vec2(40, 540), 160, 300);
 
 		if (lock) {
 			angleDiff.w = Cursor::Pos().x - clickPos.x;
