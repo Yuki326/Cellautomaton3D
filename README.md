@@ -1,5 +1,6 @@
 # 3Dセルオートマトンジェネレーター
 ![image](https://user-images.githubusercontent.com/88820769/172041957-b5008466-f6c7-40d4-a728-c0d42daafed3.png)
+![image](https://user-images.githubusercontent.com/88820769/172049407-48f12fd3-62a6-4121-9203-ac2844e52c88.png)
 
 # 使用技術
 - 言語:c++
