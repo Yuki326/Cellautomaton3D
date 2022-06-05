@@ -679,6 +679,7 @@ void Main()
 			now %= HISTORY_SIZE;
 		}
 		//描画(グラフ)
+		if(visiable)
 		drawGraph(history, now);
 		time++;
 		//デバッグ
