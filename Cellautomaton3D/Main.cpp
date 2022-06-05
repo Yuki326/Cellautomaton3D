@@ -68,12 +68,14 @@ struct star {//一番後ろのレイヤーで左から右に動かす
 	double speed;
 };
 AfinParameter3D viewingPiperine;
-const double CELL_PER = 5;
 const int SIDE_CELLS = 15;
-const int MARGIN = 5;
+double CELL_PER = 5;
+int CELLS_RANGE = 10;
+int MARGIN = SIDE_CELLS-CELLS_RANGE;
 const int CELL_SIZE = 6;
 const int MAX_HP = 200;
 const int HISTORY_SIZE = 1000;
+double COLOR = 0;
 // 共通
 _Vec3 changePos3D(_Vec3 p, AfinParameter3D afin) {//点の座標変換
 	_Vec3 res;
@@ -222,32 +224,32 @@ Array<_Model> sortModel2(Array<_Model> models) {//奥行ソート
 	return models;
 }
 // 投影変換　3次元空間上の点を2次元に配置
-Vec2 toVec2(_Vec3 pos) {
-	return Vec2{ pos.x * 1.3,pos.y * 1.3 };//平行投影z座標を無視
+Vec2 toVec2(_Vec3 pos,double scale) {
+	return Vec2{ pos.x * scale,pos.y * scale };//平行投影z座標を無視
 	//return Vec2{ pos.x/pos.z*200,pos.y/pos.z*200 };//投視投影　現時点だと歪んで見える
 }
 // 3dの三角形を2dに変換
-_Polygon renderTriangle(_Polygon3D t) {
+_Polygon renderTriangle(_Polygon3D t,double scale) {
 	_Polygon result;
-	result.points.p0 = toVec2(t.points.p0);
-	result.points.p1 = toVec2(t.points.p1);
-	result.points.p2 = toVec2(t.points.p2);
+	result.points.p0 = toVec2(t.points.p0,scale);
+	result.points.p1 = toVec2(t.points.p1,scale);
+	result.points.p2 = toVec2(t.points.p2,scale);
 	result.color = t.color;
 
 	return result;
 }
 // 立体を2dに変換
-Array<_Polygon> renderModel(Array<_Polygon3D> triangles) {
+Array<_Polygon> renderModel(Array<_Polygon3D> triangles,double scale) {
 	_Polygon n = {};
 
-	return triangles.map([n](_Polygon3D t) { return polygon_side_chk(t.points, _Vec3{ 0,0,1 }) ? renderTriangle(t) : n; });
+	return triangles.map([n,scale](_Polygon3D t) { return polygon_side_chk(t.points, _Vec3{ 0,0,1 }) ? renderTriangle(t,scale) : n; });
 }
 //　複数の立体を2dに変換
-Array<_Polygon> render(Array<_Model> models) {
+Array<_Polygon> render(Array<_Model> models,double scale) {
 	Array<_Polygon> res = {};
 	models = sortModel(models);
 	for (int i = 0; i < models.size(); i++) {
-		Array<_Polygon> toAdd = renderModel(models[i].shape);
+		Array<_Polygon> toAdd = renderModel(models[i].shape,scale);
 		for (int j = 0; j < toAdd.size(); j++) {
 			res << toAdd[j];
 		}
@@ -256,7 +258,7 @@ Array<_Polygon> render(Array<_Model> models) {
 }
 //ビューポート変換(画面に収める範囲の調整)
 Vec2 moveCenterPos(Vec2 p) {
-	return p + Scene::Center();
+	return p + Scene::Center() + Vec2{-100,-50};
 }
 _Polygon moveCenterTriangle(_Polygon t) {
 	t.points.p0 = moveCenterPos(t.points.p0);
@@ -469,7 +471,7 @@ Array<_Model> coloringModels(Array<_Model> models) {
 		models[0]
 	};
 	for (int i = 0; i < models.size(); i++) {
-		double hue = getDistToCore(models[i].zahyo);
+		double hue = getDistToCore(models[i].zahyo)+COLOR;
 		if (models[i].hp > 0)
 			models[i].shape = paintModel(models[i].shape, HSV{ hue * 3,0.6,1.0 });
 	}
@@ -494,7 +496,7 @@ void Main()
 {
 	srand(time(NULL));
 	// 背景を黒にする
-	Scene::SetBackground(Palette::Black);
+	Scene::SetBackground(Color{22,31,40});
 
 	// 大きさ 60 のフォントを用意
 	const Font font(60);
@@ -552,70 +554,75 @@ void Main()
 	Array<int> history(HISTORY_SIZE, 0);
 	int now = 0;
 	Vec2 center = Scene::Center();
-	Vec2 Button1 = { center.x + 270, center.y + 180 };
-	Vec2 Button2 = { center.x - 270, center.y + 180 };
-	const RectF addButton(Arg::center(Button1), 80,80);
-	const RectF resetButton(Arg::center(Button2), 80);
-
+	bool visiable = true;
+	bool lock = false;
+	int moveState = 0;
+	Vec2 clickPos;
+	Angle angleStart,angleDiff;
+	double scale = 1.3;
 	while (System::Update())
 	{
 		const double delta = 200 * Scene::DeltaTime();
 
-		// 上下左右キーで移動
-		if (KeyA.pressed())
-		{
-			models[1].object.pos.x += delta;
-		}
+		Rect(Scene::Width() - 200,5, 190, Scene::Height()-10).draw(Color{64,53,130});
+		Rect(5, Scene::Height() - 100, Scene::Width() - 210, 90).draw(Color{ 64,53,130 });
 
-		if (KeyD.pressed())
-		{
-			models[1].object.pos.x -= delta;
+		scale += Mouse::Wheel()/10;
+		//SimpleGUI::Button(U"\U000F04AD", Vec2(100, 100), 100);
+		if (visiable) {
+			if (SimpleGUI::Button(U"\U000F020A", Vec2(650, 300), 100)) {
+				fieldState = addField(fieldState);
+				models = fieldToModels(fieldState, models, cubePolygons, core);
+			};
+			if (SimpleGUI::Button(U"\U000F04E6", Vec2(650, 500), 100)) {
+				fieldState = getVoidField();
+				fieldState = addField(fieldState);
+				models = fieldToModels(fieldState, models, cubePolygons, core);
+			}
 		}
+		if (SimpleGUI::Button(visiable ? U"\U000F0208" : U"\U000F0209", Vec2(650, 100), 100)) {
+			visiable = !visiable;
+		}
+		if (MouseL.pressed() && Cursor::Pos().x <Scene::Width() - 150 && Cursor::Pos().y < Scene::Height() - 100) {
+			if (!lock) {
+				moveState = 20;
+				clickPos = Cursor::Pos();
+				angleStart = models[0].object.angle;
+			}
+			lock = true;
+		}
+		else {
+			lock = false;
+			moveState = moveState > 0 ? moveState - 1 : 0;
+		}
+		SimpleGUI::Slider(U"rate", CELL_PER, 3.0, 20.0, Vec2(10, 520), 60, 250);
+		SimpleGUI::Slider(U"color",COLOR , 0, 100.0, Vec2(300, 520), 60, 250);
 
-		if (KeyW.pressed())
-		{
-			models[1].object.pos.z -= delta;
-		}
+		if (lock) {
+			angleDiff.w = Cursor::Pos().x - clickPos.x;
+			angleDiff.h = Cursor::Pos().y - clickPos.y;
+			for (int i = 0; i < models.size(); i++) {
+				models[i].object.angle.w = angleDiff.w + angleStart.w;
+				models[i].object.angle.h = angleDiff.h + angleStart.h;
 
-		if (KeyS.pressed())
-		{
-			models[1].object.pos.z += delta;
-		}
-		if (KeySpace.pressed())
-		{
-			models[1].object.pos.y += delta;
-		}
-
-		if (KeyShift.pressed())
-		{
-			models[1].object.pos.y -= delta;
-		}
-		if (addButton.leftClicked())
-		{
-			fieldState = addField(fieldState);
-			models = fieldToModels(fieldState, models, cubePolygons, core);
-		}
-		if (resetButton.leftClicked())
-		{
-			fieldState = getVoidField();
-			fieldState = addField(fieldState);
-			models = fieldToModels(fieldState, models, cubePolygons, core);
-		}
-		if (time % 10 == 0) {
-			fieldState = getNextField(fieldState);
+			}
+		}		
+		
+		if (time % 10 == 0 ) {
+			if (moveState == 0) {
+				fieldState = getNextField(fieldState);
+			}
 			models = fieldToModels(fieldState, models, cubePolygons, models[0].object);
 		}
 		models = coloringModels(models);
 
 		//ClearPrint();
-		for (int i = 0; i < models.size(); i++) {
-			models[i].object.angle.w += delta / 3;
+		if (moveState == 0) {
+			for (int i = 0; i < models.size(); i++) {
+				models[i].object.angle.w += delta / 3;
+			}
 		}
-
-		//視点移動
-		//camera.angle.w = Cursor::Pos().x - Scene::Center().x;
-		//camera.angle.h = Cursor::Pos().y - Scene::Center().y;
-
+		
 		//モデリング変換
 		models_W = toWorld(models);
 
@@ -623,7 +630,7 @@ void Main()
 		Array<_Model> models_W_camera = conversionField(models_W, camera);
 
 		// 投影変換
-		Array<_Polygon> t = render(models_W_camera);
+		Array<_Polygon> t = render(models_W_camera,scale);
 
 		// ビューポート変換
 		t = moveCenterModel(t);
@@ -634,20 +641,12 @@ void Main()
 			});
 
 		//履歴
-		if (time % 10) {
+		if (time % 10 && moveState==0) {
 			history[now] = models.size();
 			now++;
 			now %= HISTORY_SIZE;
 		}
-		RectF(Arg::center(Button1), 80).draw(Color(2, 210, 22));
-		RectF(Arg::center(Button1), 60).draw(Color(10, 244, 32));
-		addButton.draw(addButton.mouseOver() ? Color(0, 0, 0, 0) : Color(0, 0, 0, 40));
-		
-		RectF(Arg::center(Button2), 80).draw(Color(242, 10, 32));
-		RectF(Arg::center(Button2), 60).draw(Color(245, 88, 52));
-		resetButton.draw(resetButton.mouseOver() ? Color(0, 0, 0, 0) : Color(0, 0, 0, 40));
 		drawGraph(history, now);
-
 		time++;
 		//デバッグ
 		//Print << Cursor::Pos(); // 現在のマウスカーソル座標を表示
