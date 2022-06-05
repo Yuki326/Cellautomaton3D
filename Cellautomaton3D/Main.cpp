@@ -582,8 +582,8 @@ void Main()
 		drawStar(hoshi);
 
 		//
-		Rect(Scene::Width() - 200,5, 190, Scene::Height()-10).draw(Color{64,53,130});
-		Rect(5, Scene::Height() - 100, Scene::Width() - 210, 90).draw(Color{ 64,53,130 });
+		Rect(Scene::Width() - 200,5, 190, Scene::Height()-10).draw(Color{64,53,130,180});
+		Rect(5, Scene::Height() - 100, Scene::Width() - 210, 90).draw(Color{ 64,53,130,180 });
 
 		scale += Mouse::Wheel()/10;
 		//SimpleGUI::Button(U"\U000F04AD", Vec2(100, 100), 100);
@@ -630,7 +630,7 @@ void Main()
 			if (moveState == 0) {
 				fieldState = getNextField(fieldState);
 
-				for (int i = 0; i < models.size() / 100 + 1; i++) {
+				for (int i = 0; i < models.size() / 200 + 1; i++) {
 					hoshi << getRandomStar(models.size() / 200);
 				}
 			}
