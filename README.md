@@ -1,6 +1,10 @@
 # 3Dセルオートマトンジェネレーター
 ![image](https://user-images.githubusercontent.com/88820769/172041957-b5008466-f6c7-40d4-a728-c0d42daafed3.png)
 
+# 遊び方
+1.CellAutomaton3D_/App/CellAutomaton3D_.exeを開く
+2.詳細情報,実行の順に選択する
+
 # 3D描画プログラム概要
 ![image](https://user-images.githubusercontent.com/88820769/172049407-48f12fd3-62a6-4121-9203-ac2844e52c88.png)
 
