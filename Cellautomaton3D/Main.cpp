@@ -492,6 +492,18 @@ void drawGraph(Array<int> history, int now) {
 		count++;
 	}
 }
+star getRandomStar(double speed) {
+	star hoshi;
+	hoshi.pos = { -(rand() % 100),rand() % Scene::Height() };
+	hoshi.size = rand() % 5+2;
+	hoshi.speed = (rand() % 20 + 100) / 15 + speed;
+	return hoshi;
+}
+void drawStar(Array<star> s) {
+	for (int i = 0; i < s.size(); i++) {
+		RectF(s[i].pos, s[i].size).draw();
+	}
+}
 void Main()
 {
 	srand(time(NULL));
@@ -560,10 +572,16 @@ void Main()
 	Vec2 clickPos;
 	Angle angleStart,angleDiff;
 	double scale = 1.3;
+
+	Array<star> hoshi = {};
 	while (System::Update())
 	{
 		const double delta = 200 * Scene::DeltaTime();
 
+		//描画(背景)
+		drawStar(hoshi);
+
+		//
 		Rect(Scene::Width() - 200,5, 190, Scene::Height()-10).draw(Color{64,53,130});
 		Rect(5, Scene::Height() - 100, Scene::Width() - 210, 90).draw(Color{ 64,53,130 });
 
@@ -611,15 +629,22 @@ void Main()
 		if (time % 10 == 0 ) {
 			if (moveState == 0) {
 				fieldState = getNextField(fieldState);
+
+				for (int i = 0; i < models.size() / 100 + 1; i++) {
+					hoshi << getRandomStar(models.size() / 200);
+				}
 			}
 			models = fieldToModels(fieldState, models, cubePolygons, models[0].object);
 		}
 		models = coloringModels(models);
-
+	
 		//ClearPrint();
 		if (moveState == 0) {
 			for (int i = 0; i < models.size(); i++) {
 				models[i].object.angle.w += delta / 3;
+			}
+			for (int i = 0; i < hoshi.size(); i++) {
+				hoshi[i].pos.x += hoshi[i].speed;
 			}
 		}
 		
@@ -634,18 +659,20 @@ void Main()
 
 		// ビューポート変換
 		t = moveCenterModel(t);
-		//描画
+
+		
+		//描画(セルオートマトン)
 		t.map([](_Polygon t) {
 			Triangle _t = { t.points.p0,t.points.p1,t.points.p2 };
 			_t.draw(t.color);  return 0;
-			});
-
+		});
 		//履歴
 		if (time % 10 && moveState==0) {
 			history[now] = models.size();
 			now++;
 			now %= HISTORY_SIZE;
 		}
+		//描画(グラフ)
 		drawGraph(history, now);
 		time++;
 		//デバッグ
